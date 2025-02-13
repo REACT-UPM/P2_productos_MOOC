@@ -1,4 +1,4 @@
-import {render, fireEvent, waitFor, waitForElementToBeRemoved, screen, act} from '@testing-library/react'
+import {render, fireEvent, waitFor, screen, act} from '@testing-library/react'
 import App from '../../src/App';
 import Header from '../../src/Header';
 import SearchPage from '../../src/SearchPage';
@@ -38,7 +38,7 @@ afterAll(() => {
 
 let testinfo = {
     name: "La aplicación tiene un componente Header con el logo y el mensaje de bienvenida con tu nombre",
-    score: 1,
+    score: 0.5,
     msg_ok: "Header encontrada",
     msg_error: "Header no encontrada o no es como se esperaba, revise el enunciado"
 }
@@ -77,7 +77,7 @@ test(JSON.stringify(testinfo), () => {
 
 testinfo = {
   name: "La aplicación tiene un componente SearchPage, con al menos un input y un button",
-  score: 1,
+  score: 0.5,
   msg_ok: "Componente SearchPage encontrado y con input y button correctos",
   msg_error: "El componente SearchPage no se ha encontrado o no tiene el input y button correctos"
 }
@@ -175,6 +175,24 @@ test(JSON.stringify(testinfo), () => {
   expect(productos.length).toBe(5);
 });
 
+testinfo = {
+  name: "La aplicación utiliza parámetros en la ruta para guardar la categoría seleccionada (con useSearchParams)",
+  score: 1,
+  msg_ok: "UseSearchParams funciona correctamente",
+  msg_error: "UseSearchParams NO funciona correctamente"
+}
+test(JSON.stringify(testinfo), () => {
+  render(<BrowserRouter><SearchPage theproducts={mockdata.products} /></BrowserRouter>);
+  const theselector = document.querySelector('#selector');
+  expect(theselector).toBeInTheDocument();
+  fireEvent.change(theselector, {target: {value: "sunglasses"}})
+
+  const divlocation = document.querySelector('#divsearch');
+  expect(divlocation).toBeInTheDocument();
+  expect(divlocation).toHaveTextContent("Category sunglasses");
+
+});
+
 
 testinfo = {
   name: "La aplicación tiene un componente para la página de un producto",
@@ -191,24 +209,26 @@ test(JSON.stringify(testinfo), async () => {
   render(<MemoryRouter initialEntries={["/products/3"]}>
     <App />
   </MemoryRouter>);
+  //run the setTimeout so the loading spinner is removed from the UX
+  act(()=>jest.runAllTimers());
 
-  await waitForElementToBeRemoved(await document.querySelector('#loading'), { timeout: 8000 })
-
-  const titulo = document.querySelector('#titulo');
-  expect(titulo).toBeInTheDocument();
-  expect(titulo).toHaveTextContent(studentmockproducts.products[3].title);
-
-  const divlocation = document.querySelector('#divlocation');
-  expect(divlocation).toBeInTheDocument();
-  expect(divlocation).toHaveTextContent("/products/3");
-
-  const divproductid = document.querySelector('#divproductid');
-  expect(divproductid).toBeInTheDocument();
-  expect(divproductid).toHaveTextContent("3");
-
-  const volver = document.querySelector('#volver');
-  expect(volver).toBeInTheDocument();    
+  await waitFor(async () => {
+    const titulo = document.querySelector('#titulo');
+    expect(titulo).toBeInTheDocument();
+    //check product with id 3 is rendered
+    expect(titulo).toHaveTextContent(studentmockproducts.products.find((x)=>x.id===3).title);
   
+    const divlocation = document.querySelector('#divlocation');
+    expect(divlocation).toBeInTheDocument();
+    expect(divlocation).toHaveTextContent("/products/3");
+
+    const divproductid = document.querySelector('#divproductid');
+    expect(divproductid).toBeInTheDocument();
+    expect(divproductid).toHaveTextContent("3");
+
+    const volver = document.querySelector('#volver');
+    expect(volver).toBeInTheDocument();    
+  });
 });
 
 
@@ -224,13 +244,14 @@ test(JSON.stringify(testinfo), async () => {
     <App />
   </MemoryRouter>);
   //run the setTimeout so the loading spinner is removed from the UX
-  await waitForElementToBeRemoved(await document.querySelector('#loading'), { timeout: 8000 });
+  act(()=>jest.runAllTimers());
 
-  const info = document.querySelector('#info');
-  expect(info).toBeInTheDocument();
-  expect(info).toHaveTextContent("Ruta no encontrada");
+  await waitFor(async () => {
+    const info = document.querySelector('#info');
+    expect(info).toBeInTheDocument();
+    expect(info).toHaveTextContent("Ruta no encontrada");
 
-  const volver = document.querySelector('#volver');
-  expect(volver).toBeInTheDocument();    
-  
+    const volver = document.querySelector('#volver');
+    expect(volver).toBeInTheDocument();    
+  });
 });
